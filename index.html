@@ -4,16 +4,20 @@
   <meta charset="UTF-8">
   <title>Login CredibanCo x Colsof</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
+    * { box-sizing: border-box; }
+
     body {
       margin: 0;
       padding: 0;
-      background: linear-gradient(to right, #005bac, #0073e6);
+      background: linear-gradient(to right, #000000, #077359);
       font-family: 'Segoe UI', sans-serif;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
+      overflow: hidden;
     }
 
     .login-container {
@@ -24,6 +28,12 @@
       text-align: center;
       width: 90%;
       max-width: 400px;
+      animation: fadeIn 1s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
     }
 
     .login-container img {
@@ -39,44 +49,100 @@
       margin-bottom: 20px;
     }
 
-    input {
+    .input-group {
+      position: relative;
+      margin-bottom: 15px;
+    }
+
+    .input-group i {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #888;
+    }
+
+    .input-group input {
       width: 100%;
-      padding: 12px;
-      margin: 10px 0;
+      padding: 12px 12px 12px 40px;
       border-radius: 8px;
       border: 1px solid #ccc;
       font-size: 16px;
+      transition: box-shadow 0.2s;
+    }
+
+    .input-group input:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px #0073e6aa;
     }
 
     button {
       width: 100%;
       padding: 12px;
-      background-color: #ffcc00;
-      color: #003f7d;
+      background-color: #000000;
+      color: #ffffff;
       font-weight: bold;
       border: none;
       border-radius: 8px;
       font-size: 16px;
-      margin-top: 15px;
+      margin-top: 10px;
       cursor: pointer;
-      transition: 0.3s;
+      transition: background-color 0.3s, transform 0.2s;
     }
 
     button:hover {
       background-color: #ffe066;
+      transform: scale(1.03);
     }
 
-    .mensaje {
-      margin-top: 15px;
-      font-weight: bold;
+    .popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 25px 30px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      z-index: 1000;
+      display: none;
+      animation: slideDown 0.5s ease;
     }
 
-    .success {
-      color: green;
+    @keyframes slideDown {
+      from { opacity: 0; transform: translate(-50%, -60%); }
+      to { opacity: 1; transform: translate(-50%, -50%); }
     }
 
-    .error {
-      color: red;
+    .popup.error { border-left: 5px solid red; }
+    .popup.success { border-left: 5px solid green; }
+
+    .overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      backdrop-filter: blur(5px);
+      background: rgba(0, 0, 0, 0.3);
+      z-index: 999;
+      display: none;
+    }
+
+    .loader {
+      margin-top: 10px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #005bac;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg);}
+      100% { transform: rotate(360deg);}
     }
   </style>
 </head>
@@ -84,13 +150,29 @@
   <div class="login-container">
     <div>
       <img src="https://www.paymentmedia.com/gallery/67d3486027b08credibanco_logo.jpg" alt="CredibanCo">
-      <img src="data:image/png;base64,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" alt="Colsof">
+      <img src="data:image/png;base64,...tu imagen base64 de Colsof..." alt="Colsof">
     </div>
+
     <h2>Iniciar Sesión</h2>
-    <input type="text" id="usuario" placeholder="Usuario">
-    <input type="password" id="contraseña" placeholder="Contraseña">
+
+    <div class="input-group">
+      <i class="fas fa-user"></i>
+      <input type="text" id="usuario" placeholder="Usuario" autocomplete="off">
+    </div>
+
+    <div class="input-group">
+      <i class="fas fa-lock"></i>
+      <input type="password" id="contraseña" placeholder="Contraseña" autocomplete="off">
+    </div>
+
     <button onclick="verificarLogin()">Entrar</button>
-    <div id="mensaje" class="mensaje"></div>
+  </div>
+
+  <!-- Ventanas flotantes -->
+  <div class="overlay" id="overlay"></div>
+  <div class="popup" id="popup">
+    <div id="popup-content"></div>
+    <div class="loader" id="loader" style="display: none;"></div>
   </div>
 
   <script>
@@ -103,22 +185,55 @@
       { usuario: "ADRIANA", contraseña: "Colombia2025" },
     ];
 
+    function mostrarPopup(mensaje, tipo = "error", cargando = false) {
+      const popup = document.getElementById("popup");
+      const overlay = document.getElementById("overlay");
+      const contenido = document.getElementById("popup-content");
+      const loader = document.getElementById("loader");
+
+      popup.className = "popup " + tipo;
+      contenido.innerText = mensaje;
+      loader.style.display = cargando ? "block" : "none";
+
+      overlay.style.display = "block";
+      popup.style.display = "block";
+
+      if (!cargando) {
+        setTimeout(() => {
+          popup.style.display = "none";
+          overlay.style.display = "none";
+        }, 2000);
+      }
+    }
+
     function verificarLogin() {
       const user = document.getElementById("usuario").value.trim();
       const pass = document.getElementById("contraseña").value.trim();
-      const mensaje = document.getElementById("mensaje");
+
+      if (user === "" || pass === "") {
+        mostrarPopup("⚠️ Por favor completa todos los campos");
+        return;
+      }
 
       const encontrado = usuariosPermitidos.find(u => u.usuario === user && u.contraseña === pass);
 
       if (encontrado) {
-        mensaje.innerHTML = '<span class="success">✅ Acceso concedido</span>';
+        // Guardar el nombre del usuario activo
+        localStorage.setItem("usuarioActivo", encontrado.usuario);
+
+        mostrarPopup("Ingresando...", "success", true);
         setTimeout(() => {
-          window.location.href = "Control.html"; // Cambia esto por la URL de tu sistema
-        }, 1000);
+          window.location.href = "Control.html"; // redirección a tu panel principal
+        }, 2000);
       } else {
-        mensaje.innerHTML = '<span class="error">❌ Usuario o contraseña incorrectos</span>';
+        mostrarPopup("❌ Usuario o contraseña incorrectos", "error");
       }
     }
+
+    // Permite iniciar sesión con Enter
+    document.addEventListener("keydown", e => {
+      if (e.key === "Enter") verificarLogin();
+    });
   </script>
 </body>
 </html>
